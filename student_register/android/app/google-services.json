@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "932204367190",
+    "project_id": "wasselni-application",
+    "storage_bucket": "wasselni-application.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:932204367190:android:706d8a14b07f16402b1af7",
+        "android_client_info": {
+          "package_name": "com.example.student_register"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "932204367190-2g8qd1bhqkbdrec2isd29kdq9afrgh27.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJxJLv9mRISMVfnfj-THVIGPwKcigJbUE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "932204367190-2g8qd1bhqkbdrec2isd29kdq9afrgh27.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
