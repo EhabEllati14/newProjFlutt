@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:firebase_auth_web/firebase_auth_web.dart';
-
 
 class OtpScreen extends StatefulWidget {
   final String verificationId;
@@ -60,12 +58,19 @@ class _OtpScreenState extends State<OtpScreen> {
     setState(() => _isLoading = true);
 
     try {
-      PhoneAuthCredential credential = PhoneAuthProvider.credential(
-        verificationId: _verificationId,
-        smsCode: _otpCode,
-      );
-
-      await _auth.signInWithCredential(credential);
+      if (kIsWeb) {
+        // Web flow: confirm code
+        ConfirmationResult result =
+            await _auth.signInWithPhoneNumber(widget.phone);
+        await result.confirm(_otpCode);
+      } else {
+        // Mobile flow
+        PhoneAuthCredential credential = PhoneAuthProvider.credential(
+          verificationId: _verificationId,
+          smsCode: _otpCode,
+        );
+        await _auth.signInWithCredential(credential);
+      }
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -75,12 +80,12 @@ class _OtpScreenState extends State<OtpScreen> {
         ),
       );
 
-      // TODO: Navigate to Home Screen
+      // TODO: Navigate to Home
       // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
-    } on FirebaseAuthException catch (e) {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("❌ Verification failed: ${e.message}"),
+          content: Text("❌ Verification failed: $e"),
           backgroundColor: Colors.red,
         ),
       );
@@ -89,60 +94,7 @@ class _OtpScreenState extends State<OtpScreen> {
     }
   }
 
-  // ✅ Resend OTP
-  Future<void> _resendOtp() async {
-    if (kIsWeb) {
-      try {
-        final verifier = RecaptchaVerifier(
-          container: 'recaptcha-container',
-          size: RecaptchaVerifierSize.normal,
-          theme: RecaptchaVerifierTheme.light,
-        );
-
-        final confirmationResult =
-            await _auth.signInWithPhoneNumber(widget.phone, verifier);
-
-        setState(() {
-          _verificationId = confirmationResult.verificationId;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("📩 OTP resent successfully (Web)")),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ Web resend failed: $e")),
-        );
-      }
-    } else {
-      await _auth.verifyPhoneNumber(
-        phoneNumber: widget.phone,
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          await _auth.signInWithCredential(credential);
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("❌ Resend failed: ${e.message}")),
-          );
-        },
-        codeSent: (String verificationId, int? resendToken) {
-          setState(() {
-            _verificationId = verificationId;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("📩 OTP resent successfully")),
-          );
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {
-          setState(() {
-            _verificationId = verificationId;
-          });
-        },
-      );
-    }
-  }
-
-  // ✅ Single OTP box
+  // ✅ OTP Input Box
   Widget _otpBox(int index) {
     return SizedBox(
       width: 45,
@@ -179,7 +131,6 @@ class _OtpScreenState extends State<OtpScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: Column(
               children: [
-                // ✅ Header Image
                 SizedBox(
                   height: size.height * 0.20,
                   child: Image.asset(
@@ -187,9 +138,7 @@ class _OtpScreenState extends State<OtpScreen> {
                     fit: BoxFit.contain,
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
                 const Text(
                   "WASSELNI",
                   style: TextStyle(
@@ -198,26 +147,18 @@ class _OtpScreenState extends State<OtpScreen> {
                     letterSpacing: 1.2,
                   ),
                 ),
-
                 const SizedBox(height: 8),
-
                 Text(
                   "Enter OTP Verification Code sent to\n${widget.phone}",
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 14, color: Colors.black54),
                 ),
-
                 const SizedBox(height: 24),
-
-                // ✅ OTP Input Boxes
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: List.generate(6, (index) => _otpBox(index)),
                 ),
-
                 const SizedBox(height: 24),
-
-                // ✅ Verify Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -236,27 +177,6 @@ class _OtpScreenState extends State<OtpScreen> {
                             style: TextStyle(fontSize: 16, color: Colors.white),
                           ),
                   ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // ✅ Resend link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Didn’t receive it? "),
-                    GestureDetector(
-                      onTap: _resendOtp,
-                      child: const Text(
-                        "Resend",
-                        style: TextStyle(
-                          color: Colors.purple,
-                          fontWeight: FontWeight.bold,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),

@@ -1,9 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'otp_screen.dart';
 
@@ -176,7 +174,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     );
   }
 
-  // ✅ Mobile OTP
+  // 📱 Mobile flow → SMS is sent
   Future<void> _sendOtpMobile(String phone) async {
     try {
       await FirebaseAuth.instance.verifyPhoneNumber(
@@ -230,19 +228,11 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     }
   }
 
-  // ✅ Web OTP
+  // 🌐 Web flow → SMS is sent
   Future<void> _sendOtpWeb(String phone) async {
     try {
-final verifier = RecaptchaVerifier(
-  container: 'recaptcha-container',
-  size: RecaptchaVerifierSize.normal,
-  theme: RecaptchaVerifierTheme.light,
-);
-
-
-
       final confirmationResult =
-          await FirebaseAuth.instance.signInWithPhoneNumber(phone, verifier);
+          await FirebaseAuth.instance.signInWithPhoneNumber(phone);
 
       if (!mounted) return;
       Navigator.push(
